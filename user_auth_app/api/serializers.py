@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 
 def check_existing_mail_adress(validated_data):
     mail_adress = validated_data.get('email')
-    mail_adress_exists = User.objects.filter(email=mail_adress).get()
+    mail_adress_exists = User.objects.filter(email=mail_adress).exists()
     if mail_adress_exists:
         raise serializers.ValidationError({'error': 'email adress already exists'})
 
@@ -38,9 +38,11 @@ class RegistrationSerializer(serializers.ModelSerializer):
         if pw != repeated_pw:
             raise serializers.ValidationError({'error':'password dont match'})
 
-        # check_existing_mail_adress(self.validated_data) # funktioniert ?
+        check_existing_mail_adress(self.validated_data) # funktioniert i?
         account = User(email=self.validated_data['email'], username=self.validated_data['username'])
         account.set_password(pw)
+        account.save()
+        return account
 
 
 

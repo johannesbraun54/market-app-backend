@@ -5,6 +5,7 @@ from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
+from rest_framework.authtoken.views import ObtainAuthToken
 
 class UserProfileList(generics.ListCreateAPIView):
     queryset = UserProfile.objects.all()
@@ -13,6 +14,28 @@ class UserProfileList(generics.ListCreateAPIView):
 class UserProfileDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = UserProfile.objects.all()
     serializer_class = UserProfileSerializer
+    
+    
+class CustomLoginView(ObtainAuthToken):
+    permission_classes = [AllowAny]
+    
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        
+        data = {}
+        if serializer.is_valid():
+            # saved_account = serializer.save()
+            user = serializer.validated_data['user']
+            token, created = Token.objects.get_or_create(user=user)
+            data = {
+                'token': token.key,
+                'username': user.username,
+                'email': user.email
+            }
+        
+        else:
+            data = serializer.errors
+        return Response(data)
 
 
 class RegistrationView(APIView):
@@ -33,5 +56,4 @@ class RegistrationView(APIView):
         
         else:
             data = serializer.errors
-        print("data",data)
         return Response(data)
